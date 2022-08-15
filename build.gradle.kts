@@ -27,7 +27,7 @@ dependencies {
     spigot("dev.kord", "kord-core", "0.8.0-M15")
 
     //KMongo dependency
-    spigot("org.litote.kmongo", "kmongo-coroutine", "4.7.0")
+    spigot("org.litote.kmongo", "kmongo-coroutine-serialization", "4.7.0")
 }
 
 tasks {
@@ -45,5 +45,12 @@ tasks {
     }
     assemble {
         dependsOn(reobfJar)
+    }
+
+    task<Copy>("installPlugin") {
+        dependsOn(jar)
+        from(jar)
+        include("*.jar")
+        into("C:\\Users\\dqmme\\mcserv\\stream-events\\plugins")
     }
 }

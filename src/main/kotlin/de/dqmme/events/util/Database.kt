@@ -9,6 +9,7 @@ import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
+import org.litote.kmongo.or
 import org.litote.kmongo.reactivestreams.KMongo
 
 object Database {
@@ -17,6 +18,7 @@ object Database {
     private lateinit var userCollection: CoroutineCollection<UserData>
 
     operator fun invoke() {
+        System.setProperty("org.litote.mongo.test.mapping.service", "org.litote.kmongo.serialization.SerializationClassMappingTypeService")
         client = KMongo.createClient().coroutine
         database = client.getDatabase(Config.getUserDatabaseName())
         userCollection = database.getCollection()
@@ -29,7 +31,7 @@ object Database {
     suspend fun getUserData(minecraftUuid: String) = userCollection.findOne(UserData::minecraftUuid eq minecraftUuid)
 
     suspend fun getUserData(discordId: Snowflake, minecraftUuid: String) =
-        userCollection.findOne(and(UserData::discordId eq discordId, UserData::minecraftUuid eq minecraftUuid))
+        userCollection.findOne(or(UserData::discordId eq discordId, UserData::minecraftUuid eq minecraftUuid))
 
     suspend fun saveUserData(userData: UserData) = userCollection.save(userData)
 }

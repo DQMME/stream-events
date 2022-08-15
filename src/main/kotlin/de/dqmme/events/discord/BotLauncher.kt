@@ -20,27 +20,29 @@ import dev.kord.core.event.interaction.GuildModalSubmitInteractionCreateEvent
 import dev.kord.core.on
 import dev.kord.rest.builder.message.create.actionRow
 import dev.kord.rest.builder.message.create.embed
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.minutes
 
-class BotLauncher {
-    private lateinit var kord: Kord
+object BotLauncher {
+    private var kord: Kord? = null
 
     suspend fun startBot() {
         val token = Config.getBotToken() ?: return
 
-        kord = Kord(token) {
+        kord = Kord(token) {}
 
+        CoroutineScope(Dispatchers.IO).launch {
+            kord!!.login {}
         }
 
-        kord.login {
-        }
+        if(kord == null) return
 
-        val channel = kord.getChannelOf<TextChannel>(Snowflake(Config.getWhitelistChannel())) ?: return
+        val channel = kord!!.getChannelOf<TextChannel>(Snowflake(Config.getWhitelistChannel())) ?: return
         val messageId = Config.getWhitelistMessageId()
 
         if (channel.getMessageOrNull(Snowflake(messageId)) == null) {
@@ -60,11 +62,10 @@ class BotLauncher {
                     color = Color(0, 234, 255)
                 }
             }
-
             Config.setWhitelistMessageId(message.id.value.toLong())
         }
 
-        kord.on<ButtonInteractionCreateEvent> {
+        kord!!.on<ButtonInteractionCreateEvent> {
             if(interaction.componentId != "link-minecraft-button") return@on
 
             interaction.modal("Minecraft Account verknüpfen", "link-minecraft-modal") {
@@ -78,7 +79,7 @@ class BotLauncher {
             }
         }
 
-        kord.on<GuildModalSubmitInteractionCreateEvent> {
+        kord!!.on<GuildModalSubmitInteractionCreateEvent> {
             if(interaction.guild.id != Snowflake(Config.getGuildId())) return@on
             val inGameName = interaction.textInputs["ingame-name"]?.value
 
@@ -115,14 +116,19 @@ class BotLauncher {
             }
 
             Database.saveUserData(userData)
+            interaction.respondEphemeral {
+                content = "Du hast deinen Minecraft Account erfolgreich verknüpft."
+            }
         }
     }
 
     suspend fun startTimer() {
+        if(kord == null) return
+
         coroutineScope {
             launch {
                 while(isActive) {
-                    val guild = kord.getGuild(Snowflake(Config.getGuildId())) ?: return@launch
+                    val guild = kord!!.getGuild(Snowflake(Config.getGuildId())) ?: return@launch
                     val subRole = guild.getRoleOrNull(Snowflake(Config.getSubRoleId())) ?: return@launch
 
                     Database.getUserData().forEach {

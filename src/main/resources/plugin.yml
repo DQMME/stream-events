@@ -1,5 +1,5 @@
 name: StreamEvents
-apiVersion: 1.19
+api-version: 1.19
 author: DQMME
 main: de.dqmme.events.StreamEvents
 version: 1.0.0

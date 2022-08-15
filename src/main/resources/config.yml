@@ -1,0 +1,6 @@
+bot_token: DEIN_DISCORD_BOT_TOKEN
+user_database_name: users
+guild_id: DEINE_DISCORD_SERVER_ID
+sub_role_id: DEINE_SUB_ROLLEN_ID
+whitelist_channel: DEIN_DISCORD_WHITELIST_CHANNEL
+whitelist_message_id: NICHTS_EINTRAGEN
